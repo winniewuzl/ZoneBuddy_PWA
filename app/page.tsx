@@ -9,9 +9,9 @@ import { TimeZoneData, availableTimeZones } from './utils/timezones'
 
 const DEFAULT_TIMEZONES = [
   { id: 'current', city: 'Your Location', identifier: Intl.DateTimeFormat().resolvedOptions().timeZone, label: '', emoji: '📍' },
-  { id: 'sf', city: 'San Francisco', identifier: 'America/Los_Angeles', label: 'HOME', emoji: '🌉' },
+  { id: 'sf', city: 'San Francisco', identifier: 'America/Los_Angeles', label: '', emoji: '🌉' },
   { id: 'ny', city: 'New York', identifier: 'America/New_York', label: 'WORK', emoji: '🗽' },
-  { id: 'london', city: 'London', identifier: 'Europe/London', label: 'TEAM', emoji: '🏰' },
+  { id: 'london', city: 'London', identifier: 'Europe/London', label: '', emoji: '🏰' },
   { id: 'tokyo', city: 'Tokyo', identifier: 'Asia/Tokyo', label: 'FRIENDS', emoji: '🗼' },
   { id: 'sydney', city: 'Sydney', identifier: 'Australia/Sydney', label: 'FAMILY', emoji: '🦘' },
 ]

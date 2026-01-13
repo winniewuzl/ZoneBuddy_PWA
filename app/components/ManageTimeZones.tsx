@@ -256,7 +256,7 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
         </div>
 
         {/* Search */}
-        <div style={{ padding: '16px' }}>
+        <div style={{ padding: '16px', position: 'relative' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -294,6 +294,59 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
               </button>
             )}
           </div>
+          {searchText && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: '64px',
+                background: 'white',
+                border: '1px solid #eee',
+                borderRadius: '12px',
+                padding: '8px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+                maxHeight: '240px',
+                overflowY: 'auto',
+                zIndex: 2,
+              }}
+            >
+              {filteredZones.length === 0 && (
+                <div style={{ padding: '12px', fontSize: '13px', color: '#777' }}>
+                  No matches
+                </div>
+              )}
+              {filteredZones.map(zone => (
+                <button
+                  key={zone.id}
+                  onClick={() => {
+                    handleAdd(zone)
+                    setSearchText('')
+                  }}
+                  disabled={localZones.some(z => z.id === zone.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px',
+                    width: '100%',
+                    background: localZones.some(z => z.id === zone.id) ? '#F0F0F0' : 'white',
+                    border: 'none',
+                    borderRadius: '10px',
+                    cursor: localZones.some(z => z.id === zone.id) ? 'default' : 'pointer',
+                    textAlign: 'left',
+                    opacity: localZones.some(z => z.id === zone.id) ? 0.5 : 1,
+                  }}
+                >
+                  <span>{zone.emoji}</span>
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: '500' }}>{zone.city}</div>
+                    <div style={{ fontSize: '12px', color: '#999' }}>{zone.identifier}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Your Time Zones */}
@@ -330,7 +383,7 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
             ADD TIME ZONE
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {filteredZones.map(zone => (
+            {availableTimeZones.map(zone => (
               <button
                 key={zone.id}
                 onClick={() => handleAdd(zone)}
