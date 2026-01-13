@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
@@ -99,6 +99,17 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
   const [localZones, setLocalZones] = useState(timeZones)
   const [isDragging, setIsDragging] = useState(false)
 
+  const resetBodyStyles = useMemo(
+    () => () => {
+      document.body.style.overflow = ''
+      document.body.style.overscrollBehavior = ''
+      document.body.style.touchAction = ''
+      document.documentElement.style.overscrollBehavior = ''
+      document.documentElement.style.touchAction = ''
+    },
+    []
+  )
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -152,21 +163,32 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
 
   const handleDone = () => {
     onUpdate(localZones)
+    resetBodyStyles()
     onClose()
   }
 
   useEffect(() => {
     if (!isDragging) {
-      document.body.style.overflow = ''
-      document.body.style.overscrollBehavior = ''
-      document.body.style.touchAction = ''
+      resetBodyStyles()
       return
     }
 
     document.body.style.overflow = 'hidden'
     document.body.style.overscrollBehavior = 'none'
     document.body.style.touchAction = 'none'
-  }, [isDragging])
+    document.documentElement.style.overscrollBehavior = 'none'
+    document.documentElement.style.touchAction = 'none'
+    return () => resetBodyStyles()
+  }, [isDragging, resetBodyStyles])
+
+  useEffect(() => {
+    return () => resetBodyStyles()
+  }, [resetBodyStyles])
+
+  const handleClose = () => {
+    resetBodyStyles()
+    onClose()
+  }
 
   return (
     <div
@@ -181,7 +203,7 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
         display: 'flex',
         alignItems: 'flex-end',
       }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         style={{
@@ -203,7 +225,7 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
           justifyContent: 'space-between',
         }}>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             style={{
               background: 'none',
               border: 'none',
