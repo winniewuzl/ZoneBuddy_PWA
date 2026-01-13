@@ -23,6 +23,14 @@ export default function Home() {
   const [showingManageZones, setShowingManageZones] = useState(false)
   const [showingDatePicker, setShowingDatePicker] = useState(false)
 
+  const resetGlobalTouchStyles = () => {
+    document.body.style.overflow = ''
+    document.body.style.overscrollBehavior = ''
+    document.body.style.touchAction = ''
+    document.documentElement.style.overscrollBehavior = ''
+    document.documentElement.style.touchAction = ''
+  }
+
   // Load settings from cookies
   useEffect(() => {
     const savedZones = Cookies.get('timeZones')
@@ -47,7 +55,20 @@ export default function Home() {
       window.addEventListener('resize', updateOffset)
       return () => window.removeEventListener('resize', updateOffset)
     }
+    if (typeof document !== 'undefined') {
+      resetGlobalTouchStyles()
+    }
   }, [])
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    if (!showingManageZones && !showingDatePicker) {
+      resetGlobalTouchStyles()
+    }
+  }, [showingManageZones, showingDatePicker])
 
   // Save settings to cookies
   useEffect(() => {
