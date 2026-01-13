@@ -276,7 +276,7 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
                 border: 'none',
                 background: 'transparent',
                 outline: 'none',
-                fontSize: '14px',
+                fontSize: '16px',
               }}
             />
             {searchText && (

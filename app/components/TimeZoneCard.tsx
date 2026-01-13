@@ -32,6 +32,16 @@ export default function TimeZoneCard({ timeZone, currentTime, dragOffset, onDrag
   const timeZoneName = abbreviationFormatter.formatToParts(currentTime)
     .find(part => part.type === 'timeZoneName')?.value || ''
 
+  const localTimeParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timeZone.identifier,
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: false,
+  }).formatToParts(currentTime)
+  const localHour = parseInt(localTimeParts.find(part => part.type === 'hour')?.value || '0', 10)
+  const localMinute = parseInt(localTimeParts.find(part => part.type === 'minute')?.value || '0', 10)
+  const localFraction = (localHour + localMinute / 60) / 24
+
   const [bgStart, bgEnd] = getBackgroundColor(currentTime, timeZone.identifier)
   const textColor = getTextColor(currentTime, timeZone.identifier)
 
@@ -81,7 +91,7 @@ export default function TimeZoneCard({ timeZone, currentTime, dragOffset, onDrag
       <div
         style={{
           position: 'absolute',
-          left: `${dragOffset - 1}px`,
+          left: `calc(${(localFraction * 100).toFixed(2)}% - 1px)`,
           top: 0,
           bottom: 0,
           width: '2px',
