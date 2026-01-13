@@ -1,6 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+  type DragCancelEvent,
+} from '@dnd-kit/core'
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { TimeZoneData, availableTimeZones } from '../utils/timezones'
 
 interface ManageTimeZonesProps {
@@ -9,9 +20,93 @@ interface ManageTimeZonesProps {
   onClose: () => void
 }
 
+interface SortableZoneItemProps {
+  zone: TimeZoneData
+  onRemove: (id: string) => void
+}
+
+function SortableZoneItem({ zone, onRemove }: SortableZoneItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: zone.id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px',
+        background: '#F9F9F9',
+        borderRadius: '12px',
+        opacity: isDragging ? 0.7 : 1,
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span>{zone.emoji}</span>
+        <div>
+          <div style={{ fontSize: '16px', fontWeight: '500' }}>{zone.city}</div>
+          <div style={{ fontSize: '13px', color: '#999' }}>{zone.identifier}</div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          aria-label={`Reorder ${zone.city}`}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '18px',
+            color: '#999',
+            cursor: 'grab',
+            padding: '6px',
+            touchAction: 'none',
+          }}
+        >
+          ☰
+        </button>
+        <button
+          onClick={() => onRemove(zone.id)}
+          aria-label={`Remove ${zone.city}`}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '18px',
+            color: '#999',
+            cursor: 'pointer',
+          }}
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function ManageTimeZones({ timeZones, onUpdate, onClose }: ManageTimeZonesProps) {
   const [searchText, setSearchText] = useState('')
   const [localZones, setLocalZones] = useState(timeZones)
+  const [isDragging, setIsDragging] = useState(false)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 220,
+        tolerance: 6,
+      },
+    })
+  )
 
   const filteredZones = availableTimeZones.filter(zone =>
     zone.city.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -28,21 +123,50 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
     setLocalZones(localZones.filter(z => z.id !== id))
   }
 
-  const handleMove = (index: number, direction: number) => {
-    const nextIndex = index + direction
-    if (nextIndex < 0 || nextIndex >= localZones.length) {
+  const handleDragStart = (_event: DragStartEvent) => {
+    setIsDragging(true)
+    if (navigator.vibrate) {
+      navigator.vibrate(10)
+    }
+  }
+
+  const handleDragCancel = (_event: DragCancelEvent) => {
+    setIsDragging(false)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setIsDragging(false)
+
+    if (!over || active.id === over.id) {
       return
     }
-    const updated = [...localZones]
-    const [moved] = updated.splice(index, 1)
-    updated.splice(nextIndex, 0, moved)
-    setLocalZones(updated)
+
+    const oldIndex = localZones.findIndex(zone => zone.id === active.id)
+    const newIndex = localZones.findIndex(zone => zone.id === over.id)
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      setLocalZones(arrayMove(localZones, oldIndex, newIndex))
+    }
   }
 
   const handleDone = () => {
     onUpdate(localZones)
     onClose()
   }
+
+  useEffect(() => {
+    if (!isDragging) {
+      document.body.style.overflow = ''
+      document.body.style.overscrollBehavior = ''
+      document.body.style.touchAction = ''
+      return
+    }
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+    document.body.style.touchAction = 'none'
+  }, [isDragging])
 
   return (
     <div
@@ -155,73 +279,27 @@ export default function ManageTimeZones({ timeZones, onUpdate, onClose }: Manage
           <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#999', marginBottom: '8px' }}>
             YOUR TIME ZONES
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {localZones.map((zone, index) => (
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={localZones.map(zone => zone.id)} strategy={verticalListSortingStrategy}>
               <div
-                key={zone.id}
                 style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px',
-                  background: '#F9F9F9',
-                  borderRadius: '12px',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  touchAction: isDragging ? 'none' : 'pan-y',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>{zone.emoji}</span>
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '500' }}>{zone.city}</div>
-                    <div style={{ fontSize: '13px', color: '#999' }}>{zone.identifier}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <button
-                      onClick={() => handleMove(index, -1)}
-                      disabled={index === 0}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '12px',
-                        color: '#666',
-                        cursor: 'pointer',
-                        opacity: index === 0 ? 0.3 : 1,
-                      }}
-                    >
-                      ▲
-                    </button>
-                    <button
-                      onClick={() => handleMove(index, 1)}
-                      disabled={index === localZones.length - 1}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '12px',
-                        color: '#666',
-                        cursor: 'pointer',
-                        opacity: index === localZones.length - 1 ? 0.3 : 1,
-                      }}
-                    >
-                      ▼
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => handleRemove(zone.id)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '18px',
-                      color: '#999',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    ✕
-                  </button>
-                </div>
+                {localZones.map(zone => (
+                  <SortableZoneItem key={zone.id} zone={zone} onRemove={handleRemove} />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
 
         {/* Available Time Zones */}
