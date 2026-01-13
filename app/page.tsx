@@ -110,7 +110,7 @@ export default function Home() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img
-            src="/icon-192.png"
+            src="/zonebuddy_logo.png"
             alt="ZoneBuddy"
             style={{ width: '22px', height: '22px', borderRadius: '6px' }}
           />

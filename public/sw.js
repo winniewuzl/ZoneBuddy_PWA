@@ -1,9 +1,10 @@
-const CACHE_NAME = 'zonebuddy-v1'
+const CACHE_NAME = 'zonebuddy-v2'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
+  '/zonebuddy_logo.png',
 ]
 
 self.addEventListener('install', (event) => {
