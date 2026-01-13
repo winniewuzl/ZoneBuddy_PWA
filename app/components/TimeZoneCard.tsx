@@ -8,9 +8,16 @@ interface TimeZoneCardProps {
   currentTime: Date
   dragOffset: number
   onDrag: (clientX: number) => void
+  referenceTimeZone: string
 }
 
-export default function TimeZoneCard({ timeZone, currentTime, dragOffset, onDrag }: TimeZoneCardProps) {
+export default function TimeZoneCard({
+  timeZone,
+  currentTime,
+  dragOffset,
+  onDrag,
+  referenceTimeZone,
+}: TimeZoneCardProps) {
   const [isDragging, setIsDragging] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
@@ -41,6 +48,29 @@ export default function TimeZoneCard({ timeZone, currentTime, dragOffset, onDrag
   const localHour = parseInt(localTimeParts.find(part => part.type === 'hour')?.value || '0', 10)
   const localMinute = parseInt(localTimeParts.find(part => part.type === 'minute')?.value || '0', 10)
   const localFraction = (localHour + localMinute / 60) / 24
+
+  const dateFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timeZone.identifier,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  })
+  const referenceDateFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: referenceTimeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  })
+
+  const getDateKey = (formatter: Intl.DateTimeFormat) => {
+    const parts = formatter.formatToParts(currentTime)
+    const year = parseInt(parts.find(part => part.type === 'year')?.value || '0', 10)
+    const month = parseInt(parts.find(part => part.type === 'month')?.value || '1', 10)
+    const day = parseInt(parts.find(part => part.type === 'day')?.value || '1', 10)
+    return Date.UTC(year, month - 1, day)
+  }
+
+  const dayOffset = Math.round((getDateKey(dateFormatter) - getDateKey(referenceDateFormatter)) / 86400000)
 
   const [bgStart, bgEnd] = getBackgroundColor(currentTime, timeZone.identifier)
   const textColor = getTextColor(currentTime, timeZone.identifier)
@@ -120,12 +150,19 @@ export default function TimeZoneCard({ timeZone, currentTime, dragOffset, onDrag
       </div>
 
       {/* Time display */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', zIndex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', zIndex: 1 }}>
         <div style={{ fontSize: '32px', fontWeight: '500', color: textColor }}>
           {time}
         </div>
-        <div style={{ fontSize: '14px', fontWeight: '500', color: textColor, opacity: 0.8 }}>
-          {period}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1 }}>
+          {dayOffset !== 0 && (
+            <div style={{ fontSize: '10px', fontWeight: '600', color: textColor, opacity: 0.65 }}>
+              {dayOffset > 0 ? `+${dayOffset}d` : `${dayOffset}d`}
+            </div>
+          )}
+          <div style={{ fontSize: '14px', fontWeight: '500', color: textColor, opacity: 0.8 }}>
+            {period}
+          </div>
         </div>
       </div>
     </div>

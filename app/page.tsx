@@ -104,13 +104,20 @@ export default function Home() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 20px',
+        padding: 'calc(20px + env(safe-area-inset-top)) 20px 16px',
         background: 'rgba(255, 255, 255, 0.3)',
         backdropFilter: 'blur(10px)',
       }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'rgba(0, 0, 0, 0.8)' }}>
-          ZoneBuddy
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img
+            src="/icon-192.png"
+            alt="ZoneBuddy"
+            style={{ width: '22px', height: '22px', borderRadius: '6px' }}
+          />
+          <h1 style={{ fontSize: '20px', fontWeight: '600', color: 'rgba(0, 0, 0, 0.8)' }}>
+            ZoneBuddy
+          </h1>
+        </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button
@@ -161,6 +168,7 @@ export default function Home() {
               currentTime={selectedTime}
               dragOffset={dragOffset}
               onDrag={handleDrag}
+              referenceTimeZone={timeZones[0]?.identifier || zone.identifier}
             />
           ))}
         </div>
